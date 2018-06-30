@@ -32,7 +32,7 @@ export class PendingIncidentComponent implements OnInit {
   alarmName: string;
   inputPhoneNumber: string;
   inputDescription: string;
-  inputIncidentTime: string;
+  selecIncidentTime: Date;
   inputAddress: string;
   constructor(private incidentService: IncidentService,
               private notification: NzNotificationService,
@@ -49,7 +49,7 @@ export class PendingIncidentComponent implements OnInit {
       phoneNumberPrefix: [ '+86' ],
       phoneNumber      : [ null, [ Validators.required ] ],
       description          : [ null, [ Validators.required ] ],
-      incidentTime          : [ null, [ Validators.required ] ],
+      selecIncidentTime          : [ null, [ Validators.required ] ],
       address          : [ null, [ Validators.required ] ]
     });
   }
@@ -70,7 +70,12 @@ export class PendingIncidentComponent implements OnInit {
     });
   }
 
-  // 新增警情用到
+  // 添加一条警情到内存数据库
+  addIncidentService(incident: Incident): void {
+    this.incidentService.addIncident(incident).subscribe();
+  }
+
+  // 新增警情时候弹出模态框
   addIncident(): void {
     this.incidentModIsVisible = true;
   }
@@ -88,26 +93,28 @@ export class PendingIncidentComponent implements OnInit {
       }
     }
     if (num === 0) {
-       // 增加数据
-     this.dataSet = [ ...this.dataSet, {
-       id    : 'ECUCity-20180611-0101-10236' + num,
+    
+      // 定义一个随机数a
+     let a = Math.ceil(Math.random()*9);
+     this.incidentData = {
+       id    : 'ECUCity-20180611-0101-10236' + a,
        phoneNumber   : this.inputPhoneNumber,
        address    : this.inputAddress,
        status: 0,
        alarmName: this.alarmName,
-       incidentTime: this.inputIncidentTime,
+       incidentTime: this.selecIncidentTime.toLocaleDateString(),
        description: this.inputDescription
-     }];
+     };
+
+     this.addIncidentService(this.incidentData);
       // 通知右边菜单中的数字角标
       this.eventAggregator.publish(this.stringKey.RefreshUnTreated, this.dataSet.length);
-      // 弹出框提示通知
-      this.createNotification('info');
       this.nzMessageService.info('添加成功');
+      this.getAllIncident();
               // 清空表单数据
               this.alarmName = '';
               this.inputAddress = '';
               this.inputPhoneNumber = '';
-              this.inputIncidentTime = '';
               this.inputDescription = '';
       this.incidentModIsVisible = false;
     }
